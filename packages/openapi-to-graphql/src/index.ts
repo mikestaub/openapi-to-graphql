@@ -406,7 +406,7 @@ async function translateOpenApiToGraphQL(
             description: 'The start of any query',
             fields: queryFields
           })
-        : GraphQLTools.getEmptyObjectType('query'),
+        : GraphQLTools.getEmptyObjectType('Query'), // A GraphQL schema must contain a Query object type
     mutation:
       Object.keys(mutationFields).length > 0
         ? new GraphQLObjectType({
