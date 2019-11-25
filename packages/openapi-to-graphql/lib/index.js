@@ -470,4 +470,5 @@ function preliminaryChecks(options, data) {
 }
 var oas_3_tools_1 = require("./oas_3_tools");
 exports.sanitize = oas_3_tools_1.sanitize;
+exports.CaseStyle = oas_3_tools_1.CaseStyle;
 //# sourceMappingURL=index.js.map

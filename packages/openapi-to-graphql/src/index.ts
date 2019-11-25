@@ -602,4 +602,4 @@ function preliminaryChecks(
   }
 }
 
-export { sanitize } from './oas_3_tools'
+export { sanitize, CaseStyle } from './oas_3_tools'
