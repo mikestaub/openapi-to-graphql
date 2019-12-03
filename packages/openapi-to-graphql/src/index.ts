@@ -243,7 +243,7 @@ async function translateOpenApiToGraphQL(
 
       if (!operation.isMutation) {
         let fieldName = Oas3Tools.uncapitalize(
-          operation.responseDefinition.otName
+          operation.responseDefinition.graphQLTypeName
         )
         if (operation.inViewer) {
           for (let securityRequirement of operation.securityRequirements) {
@@ -439,9 +439,9 @@ async function translateOpenApiToGraphQL(
    * if a field references an undefined Object Types, GraphQL will throw.
    */
   Object.entries(data.operations).forEach(([opId, operation]) => {
-    if (typeof operation.responseDefinition.ot === 'undefined') {
-      operation.responseDefinition.ot = GraphQLTools.getEmptyObjectType(
-        operation.responseDefinition.otName
+    if (typeof operation.responseDefinition.graphQLType === 'undefined') {
+      operation.responseDefinition.graphQLType = GraphQLTools.getEmptyObjectType(
+        operation.responseDefinition.graphQLTypeName
       )
     }
   })
@@ -469,7 +469,7 @@ function getFieldForOperation(
 
   // Create resolve function:
   const payloadSchemaName = operation.payloadDefinition
-    ? operation.payloadDefinition.iotName
+    ? operation.payloadDefinition.graphQLInputObjectTypeName
     : null
 
   const resolve = getResolver({
