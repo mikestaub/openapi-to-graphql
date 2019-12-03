@@ -156,6 +156,7 @@ provideErrorExtensions, equivalentToMessages }) {
             .forEach(([operationId, operation]) => {
             translationLog(`Process operation '${operationId}'...`);
             let field = getFieldForOperation(operation, options.baseUrl, data, requestOptions);
+            const saneOperationId = Oas3Tools.sanitize(operationId, Oas3Tools.CaseStyle.camelCase);
             if (!operation.isMutation) {
                 let fieldName = Oas3Tools.uncapitalize(operation.responseDefinition.otName);
                 if (operation.inViewer) {
@@ -170,7 +171,7 @@ provideErrorExtensions, equivalentToMessages }) {
                              * forced to be the operationId
                              */
                             operationIdFieldNames) {
-                            fieldName = Oas3Tools.sanitizeAndStore(operationId, data.saneMap);
+                            fieldName = Oas3Tools.storeSaneName(saneOperationId, operationId, data.saneMap);
                         }
                         if (fieldName in authQueryFields[securityRequirement]) {
                             utils_1.handleWarning({
@@ -197,7 +198,7 @@ provideErrorExtensions, equivalentToMessages }) {
                          * forced to be the operationId
                          */
                         operationIdFieldNames) {
-                        fieldName = Oas3Tools.sanitizeAndStore(operationId, data.saneMap);
+                        fieldName = Oas3Tools.storeSaneName(saneOperationId, operationId, data.saneMap);
                     }
                     if (fieldName in queryFields) {
                         utils_1.handleWarning({
@@ -220,7 +221,7 @@ provideErrorExtensions, equivalentToMessages }) {
                  * Use operationId to avoid problems differentiating operations with the
                  * same path but differnet methods
                  */
-                let saneFieldName = Oas3Tools.sanitizeAndStore(operationId, data.saneMap);
+                let saneFieldName = Oas3Tools.storeSaneName(saneOperationId, operationId, data.saneMap);
                 if (operation.inViewer) {
                     for (let securityRequirement of operation.securityRequirements) {
                         if (typeof authMutationFields[securityRequirement] !== 'object') {
