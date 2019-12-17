@@ -216,7 +216,7 @@ function sanitizeObjKeys(obj, exceptions = []) {
             const res = {};
             for (let key in obj) {
                 if (!exceptions.includes(key)) {
-                    const saneKey = sanitize(key);
+                    const saneKey = sanitize(key, CaseStyle.camelCase);
                     if (Object.prototype.hasOwnProperty.call(obj, key)) {
                         res[saneKey] = cleanKeys(obj[key]);
                     }
@@ -280,7 +280,7 @@ function instantiatePathAndGetQuery(path, parameters, args // NOTE: argument key
     if (Array.isArray(parameters)) {
         // Iterate parameters:
         for (let param of parameters) {
-            const sanitizedParamName = sanitize(param.name);
+            const sanitizedParamName = sanitize(param.name, CaseStyle.camelCase);
             if (sanitizedParamName && sanitizedParamName in args) {
                 switch (param.in) {
                     // Path parameters
@@ -802,29 +802,50 @@ function getSecurityRequirements(path, method, securitySchemes, oas) {
     return results;
 }
 exports.getSecurityRequirements = getSecurityRequirements;
+var CaseStyle;
+(function (CaseStyle) {
+    CaseStyle[CaseStyle["PascalCase"] = 0] = "PascalCase";
+    CaseStyle[CaseStyle["camelCase"] = 1] = "camelCase";
+    CaseStyle[CaseStyle["ALL_CAPS"] = 2] = "ALL_CAPS"; // Used for enum values
+})(CaseStyle = exports.CaseStyle || (exports.CaseStyle = {}));
 /**
  * First sanitizes given string and then also camel-cases it.
  */
-function sanitize(str, lowercaseFirstChar = true) {
+function sanitize(str, caseStyle) {
     /**
      * Remove all GraphQL unsafe characters
-     *
-     * Also remove _, even though it is GraphQL safe, to follow prescribed
-     * GraphQL naming conventions, which either use PascalCase, camelCase,
-     * or ALL_CAPS (the last of which has not been implemented)
-     *
-     * TODO: Adapt to allow for ALL_CAPS
      */
-    let sanitized = str.split(/[^a-zA-Z0-9]/g).reduce((path, part) => {
-        return path + capitalize(part);
+    const regex = caseStyle === CaseStyle.ALL_CAPS
+        ? /[^a-zA-Z0-9_]/g // ALL_CAPS has underscores
+        : /[^a-zA-Z0-9]/g;
+    let sanitized = str.split(regex).reduce((path, part) => {
+        if (caseStyle === CaseStyle.ALL_CAPS) {
+            return path + '_' + part;
+        }
+        else {
+            return path + capitalize(part);
+        }
     });
+    switch (caseStyle) {
+        case CaseStyle.PascalCase:
+            // The first character in PascalCase should be uppercase
+            sanitized = capitalize(sanitized);
+            break;
+        case CaseStyle.camelCase:
+            // The first character in camelCase should be lowercase
+            sanitized = uncapitalize(sanitized);
+            break;
+        case CaseStyle.ALL_CAPS:
+            // Delete first underscore
+            if (sanitized.charAt(0) === '_') {
+                sanitized = sanitized.substr(0);
+            }
+            sanitized = sanitized.toUpperCase();
+            break;
+    }
     // Special case: we cannot start with number, and cannot be empty:
     if (/^[0-9]/.test(sanitized) || sanitized === '') {
         sanitized = '_' + sanitized;
-    }
-    // First character should be lowercase
-    if (lowercaseFirstChar) {
-        sanitized = uncapitalize(sanitized);
     }
     return sanitized;
 }
@@ -833,32 +854,23 @@ exports.sanitize = sanitize;
  * Sanitizes the given string and stores the sanitized-to-original mapping in
  * the given mapping.
  */
-function sanitizeAndStore(str, mapping) {
-    if (!(typeof mapping === 'object')) {
-        throw new Error(`No/invalid mapping passed to sanitizeAndStore`);
+function storeSaneName(saneStr, str, mapping) {
+    if (saneStr in mapping && str !== mapping[saneStr]) {
+        // TODO: Follow warning model
+        translationLog(`Warning: '${str}' and '${mapping[saneStr]}' both sanitize ` +
+            `to '${saneStr}' - collision possible. Desanitize to '${str}'.`);
     }
-    const clean = sanitize(str);
-    if (!clean) {
-        throw new Error(`Cannot sanitizeAndStore '${str}'`);
-    }
-    else if (clean !== str) {
-        if (clean in mapping && str !== mapping[clean]) {
-            // TODO: Follow warning model
-            translationLog(`Warning: '${str}' and '${mapping[clean]}' both sanitize ` +
-                `to '${clean}' - collision possible. Desanitize to '${str}'.`);
-        }
-        mapping[clean] = str;
-    }
-    return clean;
+    mapping[saneStr] = str;
+    return saneStr;
 }
-exports.sanitizeAndStore = sanitizeAndStore;
+exports.storeSaneName = storeSaneName;
 /**
  * Return an object similar to the input object except the keys are all
  * sanitized
  */
 function sanitizeObjectKeys(obj) {
     return Object.keys(obj).reduce((acc, key) => {
-        acc[sanitize(key)] = obj[key];
+        acc[sanitize(key, CaseStyle.camelCase)] = obj[key];
         return acc;
     }, {});
 }
@@ -917,7 +929,7 @@ exports.uncapitalize = uncapitalize;
  * For operations that do not have an operationId, generate one
  */
 function generateOperationId(method, path) {
-    return sanitize(`${method}:${path}`);
+    return sanitize(`${method}:${path}`, CaseStyle.camelCase);
 }
 exports.generateOperationId = generateOperationId;
 //# sourceMappingURL=oas_3_tools.js.map

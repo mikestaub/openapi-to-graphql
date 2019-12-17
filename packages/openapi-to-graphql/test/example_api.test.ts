@@ -65,6 +65,9 @@ test('Get descriptions', () => {
               description: null
             },
             {
+              description: null
+            },
+            {
               description: 'The model of the car.'
             },
             {
@@ -89,7 +92,7 @@ test('Get resource (incl. enum)', () => {
   }`
   return graphql(createdSchema, query).then(result => {
     expect(result).toEqual({
-      data: { user: { name: 'Arlene L McMahon', status: 'staff' } }
+      data: { user: { name: 'Arlene L McMahon', status: 'STAFF' } }
     })
   })
 })
@@ -535,7 +538,7 @@ test('Get response without providing parameter with default value', () => {
 
 test('Get response with header parameters', () => {
   const query = `{
-    snack(snackType: chips, snackSize: small)
+    snack(snackType: CHIPS, snackSize: SMALL)
   }`
   return graphql(createdSchema, query).then(result => {
     expect(result).toEqual({
@@ -569,7 +572,7 @@ test('Get JSON response even with non-JSON accept header', () => {
 
 test('Get response with cookies', () => {
   const query = `{
-    cookie (cookieType:chocolateChip, cookieSize:megaSized)
+    cookie (cookieType: CHOCOLATE_CHIP, cookieSize: MEGA_SIZED)
   }`
   return graphql(createdSchema, query).then(result => {
     expect(result).toEqual({
@@ -806,14 +809,22 @@ test('Request data is correctly de-sanitized to be sent', () => {
   })
 })
 
-// Testing additionalProperties field in schemas
 test('Fields with arbitrary JSON (e.g., maps) can be returned', () => {
+  // Testing additionalProperties field in schemas
   const query = `{
     cars {
       tags
     }
   }`
-  return graphql(createdSchema, query, null, {}).then(result => {
+
+  // Testing empty properties field
+  const query2 = `{
+    cars {
+      features
+    }
+  }`
+
+  const promise = graphql(createdSchema, query, null, {}).then(result => {
     expect(result).toEqual({
       data: {
         cars: [
@@ -840,6 +851,31 @@ test('Fields with arbitrary JSON (e.g., maps) can be returned', () => {
       }
     })
   })
+
+  const promise2 = graphql(createdSchema, query2, null, {}).then(result => {
+    expect(result).toEqual({
+      data: {
+        cars: [
+          {
+            features: {
+              color: 'banana yellow to be specific'
+            }
+          },
+          {
+            features: null
+          },
+          {
+            features: null
+          },
+          {
+            features: null
+          }
+        ]
+      }
+    })
+  })
+
+  return Promise.all([promise, promise2])
 })
 
 test('Capitalized enum values can be returned', () => {

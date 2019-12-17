@@ -156,8 +156,9 @@ provideErrorExtensions, equivalentToMessages }) {
             .forEach(([operationId, operation]) => {
             translationLog(`Process operation '${operationId}'...`);
             let field = getFieldForOperation(operation, options.baseUrl, data, requestOptions);
+            const saneOperationId = Oas3Tools.sanitize(operationId, Oas3Tools.CaseStyle.camelCase);
             if (!operation.isMutation) {
-                let fieldName = Oas3Tools.uncapitalize(operation.responseDefinition.otName);
+                let fieldName = Oas3Tools.uncapitalize(operation.responseDefinition.graphQLTypeName);
                 if (operation.inViewer) {
                     for (let securityRequirement of operation.securityRequirements) {
                         if (typeof authQueryFields[securityRequirement] !== 'object') {
@@ -170,7 +171,7 @@ provideErrorExtensions, equivalentToMessages }) {
                              * forced to be the operationId
                              */
                             operationIdFieldNames) {
-                            fieldName = Oas3Tools.sanitizeAndStore(operationId, data.saneMap);
+                            fieldName = Oas3Tools.storeSaneName(saneOperationId, operationId, data.saneMap);
                         }
                         if (fieldName in authQueryFields[securityRequirement]) {
                             utils_1.handleWarning({
@@ -197,7 +198,7 @@ provideErrorExtensions, equivalentToMessages }) {
                          * forced to be the operationId
                          */
                         operationIdFieldNames) {
-                        fieldName = Oas3Tools.sanitizeAndStore(operationId, data.saneMap);
+                        fieldName = Oas3Tools.storeSaneName(saneOperationId, operationId, data.saneMap);
                     }
                     if (fieldName in queryFields) {
                         utils_1.handleWarning({
@@ -220,7 +221,7 @@ provideErrorExtensions, equivalentToMessages }) {
                  * Use operationId to avoid problems differentiating operations with the
                  * same path but differnet methods
                  */
-                let saneFieldName = Oas3Tools.sanitizeAndStore(operationId, data.saneMap);
+                let saneFieldName = Oas3Tools.storeSaneName(saneOperationId, operationId, data.saneMap);
                 if (operation.inViewer) {
                     for (let securityRequirement of operation.securityRequirements) {
                         if (typeof authMutationFields[securityRequirement] !== 'object') {
@@ -304,7 +305,7 @@ provideErrorExtensions, equivalentToMessages }) {
                     description: 'The start of any query',
                     fields: queryFields
                 })
-                : GraphQLTools.getEmptyObjectType('query'),
+                : GraphQLTools.getEmptyObjectType('Query'),
             mutation: Object.keys(mutationFields).length > 0
                 ? new graphql_1.GraphQLObjectType({
                     name: 'Mutation',
@@ -320,8 +321,8 @@ provideErrorExtensions, equivalentToMessages }) {
          * if a field references an undefined Object Types, GraphQL will throw.
          */
         Object.entries(data.operations).forEach(([opId, operation]) => {
-            if (typeof operation.responseDefinition.ot === 'undefined') {
-                operation.responseDefinition.ot = GraphQLTools.getEmptyObjectType(operation.responseDefinition.otName);
+            if (typeof operation.responseDefinition.graphQLType === 'undefined') {
+                operation.responseDefinition.graphQLType = GraphQLTools.getEmptyObjectType(operation.responseDefinition.graphQLTypeName);
             }
         });
         const schema = new graphql_1.GraphQLSchema(schemaConfig);
@@ -340,7 +341,7 @@ function getFieldForOperation(operation, baseUrl, data, requestOptions) {
     });
     // Create resolve function:
     const payloadSchemaName = operation.payloadDefinition
-        ? operation.payloadDefinition.iotName
+        ? operation.payloadDefinition.graphQLInputObjectTypeName
         : null;
     const resolve = resolver_builder_1.getResolver({
         operation,
@@ -470,4 +471,5 @@ function preliminaryChecks(options, data) {
 }
 var oas_3_tools_1 = require("./oas_3_tools");
 exports.sanitize = oas_3_tools_1.sanitize;
+exports.CaseStyle = oas_3_tools_1.CaseStyle;
 //# sourceMappingURL=index.js.map
