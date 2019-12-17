@@ -220,13 +220,12 @@ export function getResolver({
         if (typeof requestOptions.headers === 'object') {
           Object.assign(requestOptions.headers, headers)
         } else if (typeof requestOptions.headers === 'function') {
-          const val = requestOptions.headers({
-            req: (ctx as any).request,
+          options.headers = requestOptions.headers({
+            context: ctx,
             method,
             path,
             title
           })
-          Object.assign(options.headers, val)
         }
       } else {
         options['headers'] = headers
@@ -278,7 +277,7 @@ export function getResolver({
      */
     if (typeof data.options === 'object') {
       // Headers:
-      if (typeof data.options.headers === 'object') {
+      if (typeof data.options.headers === 'object' && !requestOptions.headers) {
         for (let header in data.options.headers) {
           const val = data.options.headers[header]
           options.headers[header] = val
