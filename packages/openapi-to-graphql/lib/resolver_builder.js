@@ -136,8 +136,18 @@ function getResolver({ operation, argsFromLink = {}, payloadName, data, baseUrl,
             options = Object.assign({}, requestOptions);
             options['method'] = operation.method;
             options['url'] = url;
-            if (options.headers) {
-                Object.assign(options.headers, headers);
+            if (requestOptions.headers) {
+                if (typeof requestOptions.headers === 'object') {
+                    Object.assign(requestOptions.headers, headers);
+                }
+                else if (typeof requestOptions.headers === 'function') {
+                    options.headers = requestOptions.headers({
+                        context: ctx,
+                        method,
+                        path,
+                        title
+                    });
+                }
             }
             else {
                 options['headers'] = headers;
@@ -186,7 +196,7 @@ function getResolver({ operation, argsFromLink = {}, payloadName, data, baseUrl,
          */
         if (typeof data.options === 'object') {
             // Headers:
-            if (typeof data.options.headers === 'object') {
+            if (typeof data.options.headers === 'object' && !requestOptions.headers) {
                 for (let header in data.options.headers) {
                     const val = data.options.headers[header];
                     options.headers[header] = val;
