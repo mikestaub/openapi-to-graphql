@@ -70,8 +70,8 @@ function createAndLoadViewer(queryFields, data, isMutation = false) {
         }
         // Create name for the viewer
         let viewerName = !isMutation
-            ? Oas3Tools.sanitize(`viewer ${viewerType}`)
-            : Oas3Tools.sanitize(`mutation viewer ${viewerType}`);
+            ? Oas3Tools.sanitize(`viewer ${viewerType}`, Oas3Tools.CaseStyle.camelCase)
+            : Oas3Tools.sanitize(`mutation viewer ${viewerType}`, Oas3Tools.CaseStyle.camelCase);
         // Ensure unique viewer name
         // If name already exists, append a number at the end of the name
         if (!(viewerType in viewerNamePostfix)) {
@@ -100,7 +100,8 @@ const getViewerOT = (name, protocolName, securityType, queryFields, data) => {
     // Resolve function:
     const resolve = (root, args, ctx) => {
         const security = {};
-        security[Oas3Tools.sanitizeAndStore(protocolName, data.saneMap)] = args;
+        const saneProtocolName = Oas3Tools.sanitize(protocolName, Oas3Tools.CaseStyle.camelCase);
+        security[Oas3Tools.storeSaneName(saneProtocolName, protocolName, data.saneMap)] = args;
         /**
          * Viewers are always root, so we can instantiate _openapiToGraphql here without
          * previously checking for its existence
@@ -161,7 +162,8 @@ const getViewerAnyAuthOT = (name, queryFields, data) => {
             data,
             isInputObjectType: true
         });
-        args[Oas3Tools.sanitizeAndStore(protocolName, data.saneMap)] = { type };
+        const saneProtocolName = Oas3Tools.sanitize(protocolName, Oas3Tools.CaseStyle.camelCase);
+        args[Oas3Tools.storeSaneName(saneProtocolName, protocolName, data.saneMap)] = { type };
     }
     args = utils_1.sortObject(args);
     // Pass object containing security information to fields

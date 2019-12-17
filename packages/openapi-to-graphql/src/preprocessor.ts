@@ -29,7 +29,7 @@ export function preprocessOas(
   options: InternalOptions
 ): PreprocessingData {
   const data: PreprocessingData = {
-    usedOTNames: [
+    usedTypeNames: [
       'Query', // Used by OpenAPI-to-GraphQL for root-level element
       'Mutation' // Used by OpenAPI-to-GraphQL for root-level element
     ],
@@ -278,7 +278,10 @@ function getProcessedSecuritySchemes(
         }
 
         parameters = {
-          apiKey: Oas3Tools.sanitize(`${key}_apiKey`)
+          apiKey: Oas3Tools.sanitize(
+            `${key}_apiKey`,
+            Oas3Tools.CaseStyle.camelCase
+          )
         }
 
         schema = {
@@ -303,8 +306,14 @@ function getProcessedSecuritySchemes(
             description = `Basic auth credentials for security protocol '${key}'`
 
             parameters = {
-              username: Oas3Tools.sanitize(`${key}_username`),
-              password: Oas3Tools.sanitize(`${key}_password`)
+              username: Oas3Tools.sanitize(
+                `${key}_username`,
+                Oas3Tools.CaseStyle.camelCase
+              ),
+              password: Oas3Tools.sanitize(
+                `${key}_password`,
+                Oas3Tools.CaseStyle.camelCase
+              )
             }
 
             schema = {
@@ -417,12 +426,14 @@ export function createDataDef(
   const saneLinks = {}
   if (typeof links === 'object') {
     Object.keys(links).forEach(linkKey => {
-      saneLinks[Oas3Tools.sanitize(linkKey)] = links[linkKey]
+      saneLinks[Oas3Tools.sanitize(linkKey, Oas3Tools.CaseStyle.camelCase)] =
+        links[linkKey]
     })
   }
 
   // Determine the index of possible existing data definition
   const index = getSchemaIndex(preferredName, schema, data.defs)
+
   if (index !== -1) {
     // Found existing data definition. Fetch it
     const existingDataDef = data.defs[index]
@@ -470,41 +481,53 @@ export function createDataDef(
     return existingDataDef
   } else {
     // Else, define a new name, store the def, and return it
-    const name = getSchemaName(data.usedOTNames, names)
+    const name = getSchemaName(names, data.usedTypeNames)
 
-    // Store and sanitize the name
-    const saneName = Oas3Tools.capitalize(
-      Oas3Tools.sanitizeAndStore(name, data.saneMap)
+    /**
+     * Store and sanitize the name
+     *
+     * TODO: Fix saneName store to avoid using camelCase and capitalizing it
+     * Can just use PascalCase from the beginning
+     */
+    const saneName = Oas3Tools.sanitize(name, Oas3Tools.CaseStyle.camelCase)
+    const otName = Oas3Tools.capitalize(
+      Oas3Tools.storeSaneName(saneName, name, data.saneMap)
     )
-    const saneInputName = Oas3Tools.capitalize(saneName + 'Input')
+    const iotName = otName + 'Input'
 
     // Determine the type of the schema
     const type = Oas3Tools.getSchemaType(schema as SchemaObject, data)
-    if (type) {
+
+    // Only add type names if a type will be created
+    if (type === 'object' || type === 'array' || type === 'enum') {
       // Add the names to the master list
-      data.usedOTNames.push(saneName)
-      data.usedOTNames.push(saneInputName)
+      data.usedTypeNames.push(otName)
 
-      const def: DataDefinition = {
-        preferredName,
+      // TODO: selectively add input object type names if they will be created
+      data.usedTypeNames.push(iotName)
+    }
 
-        /**
-         * Note that schema may contain $ref or schema composition (e.g. allOf)
-         *
-         * TODO: the schema is used in getSchemaIndex, which allows us to check
-         * whether a dataDef has already been created for that particular
-         * schema and name pair. The look up should resolve references but
-         * currently, it does not.
-         */
-        schema,
+    const def: DataDefinition = {
+      preferredName,
 
-        type,
-        subDefinitions: undefined,
-        links: saneLinks,
-        otName: saneName,
-        iotName: saneInputName
-      }
+      /**
+       * Note that schema may contain $ref or schema composition (e.g. allOf)
+       *
+       * TODO: the schema is used in getSchemaIndex, which allows us to check
+       * whether a dataDef has already been created for that particular
+       * schema and name pair. The look up should resolve references but
+       * currently, it does not.
+       */
+      schema,
 
+      type,
+      subDefinitions: undefined,
+      links: saneLinks,
+      graphQLTypeName: otName,
+      graphQLInputObjectTypeName: iotName
+    }
+
+    if (type) {
       // Add the def to the master list
       data.defs.push(def)
 
@@ -642,7 +665,7 @@ function getPreferredName(names: Oas3Tools.SchemaNames): string {
     schemaName = 'PlaceholderName'
   }
 
-  return Oas3Tools.sanitize(schemaName)
+  return Oas3Tools.sanitize(schemaName, Oas3Tools.CaseStyle.camelCase)
 }
 
 /**
@@ -650,17 +673,10 @@ function getPreferredName(names: Oas3Tools.SchemaNames): string {
  * considering not reusing existing names.
  */
 function getSchemaName(
-  usedNames: string[],
-  names?: Oas3Tools.SchemaNames
+  names: Oas3Tools.SchemaNames,
+  usedNames: string[]
 ): string {
-  if (!names || typeof names === 'undefined') {
-    throw new Error(`Cannot create data definition without name(s).`)
-
-    // Cannot create a schema name from only preferred name
-  } else if (
-    Object.keys(names).length === 1 &&
-    typeof names.preferred === 'string'
-  ) {
+  if (Object.keys(names).length === 1 && typeof names.preferred === 'string') {
     throw new Error(
       `Cannot create data definition without name(s), excluding the preferred name.`
     )
@@ -670,7 +686,10 @@ function getSchemaName(
 
   // CASE: name from reference
   if (typeof names.fromRef === 'string') {
-    const saneName = Oas3Tools.capitalize(Oas3Tools.sanitize(names.fromRef))
+    const saneName = Oas3Tools.sanitize(
+      names.fromRef,
+      Oas3Tools.CaseStyle.PascalCase
+    )
     if (!usedNames.includes(saneName)) {
       schemaName = names.fromRef
     }
@@ -678,7 +697,10 @@ function getSchemaName(
 
   // CASE: name from schema (i.e., "title" property in schema)
   if (!schemaName && typeof names.fromSchema === 'string') {
-    const saneName = Oas3Tools.capitalize(Oas3Tools.sanitize(names.fromSchema))
+    const saneName = Oas3Tools.sanitize(
+      names.fromSchema,
+      Oas3Tools.CaseStyle.PascalCase
+    )
     if (!usedNames.includes(saneName)) {
       schemaName = names.fromSchema
     }
@@ -686,7 +708,10 @@ function getSchemaName(
 
   // CASE: name from path
   if (!schemaName && typeof names.fromPath === 'string') {
-    const saneName = Oas3Tools.capitalize(Oas3Tools.sanitize(names.fromPath))
+    const saneName = Oas3Tools.sanitize(
+      names.fromPath,
+      Oas3Tools.CaseStyle.PascalCase
+    )
     if (!usedNames.includes(saneName)) {
       schemaName = names.fromPath
     }
@@ -694,17 +719,19 @@ function getSchemaName(
 
   // CASE: all names are already used - create approximate name
   if (!schemaName) {
-    const tempName = Oas3Tools.capitalize(
-      Oas3Tools.sanitize(
-        typeof names.fromRef === 'string'
-          ? names.fromRef
-          : typeof names.fromSchema === 'string'
-          ? names.fromSchema
-          : typeof names.fromPath === 'string'
-          ? names.fromPath
-          : 'PlaceholderName'
-      )
+    schemaName = Oas3Tools.sanitize(
+      typeof names.fromRef === 'string'
+        ? names.fromRef
+        : typeof names.fromSchema === 'string'
+        ? names.fromSchema
+        : typeof names.fromPath === 'string'
+        ? names.fromPath
+        : 'PlaceholderName',
+      Oas3Tools.CaseStyle.PascalCase
     )
+  }
+
+  if (usedNames.includes(schemaName)) {
     let appendix = 2
 
     /**
@@ -712,10 +739,10 @@ function getSchemaName(
      * the master list append an incremental number until the name does not
      * exist anymore.
      */
-    while (usedNames.includes(`${tempName}${appendix}`)) {
+    while (usedNames.includes(`${schemaName}${appendix}`)) {
       appendix++
     }
-    schemaName = `${tempName}${appendix}`
+    schemaName = `${schemaName}${appendix}`
   }
 
   return schemaName

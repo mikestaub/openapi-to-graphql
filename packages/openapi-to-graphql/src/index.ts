@@ -236,9 +236,14 @@ async function translateOpenApiToGraphQL(
         requestOptions
       )
 
+      const saneOperationId = Oas3Tools.sanitize(
+        operationId,
+        Oas3Tools.CaseStyle.camelCase
+      )
+
       if (!operation.isMutation) {
         let fieldName = Oas3Tools.uncapitalize(
-          operation.responseDefinition.otName
+          operation.responseDefinition.graphQLTypeName
         )
         if (operation.inViewer) {
           for (let securityRequirement of operation.securityRequirements) {
@@ -254,7 +259,11 @@ async function translateOpenApiToGraphQL(
                */
               operationIdFieldNames
             ) {
-              fieldName = Oas3Tools.sanitizeAndStore(operationId, data.saneMap)
+              fieldName = Oas3Tools.storeSaneName(
+                saneOperationId,
+                operationId,
+                data.saneMap
+              )
             }
 
             if (fieldName in authQueryFields[securityRequirement]) {
@@ -283,7 +292,11 @@ async function translateOpenApiToGraphQL(
              */
             operationIdFieldNames
           ) {
-            fieldName = Oas3Tools.sanitizeAndStore(operationId, data.saneMap)
+            fieldName = Oas3Tools.storeSaneName(
+              saneOperationId,
+              operationId,
+              data.saneMap
+            )
           }
 
           if (fieldName in queryFields) {
@@ -306,7 +319,9 @@ async function translateOpenApiToGraphQL(
          * Use operationId to avoid problems differentiating operations with the
          * same path but differnet methods
          */
-        let saneFieldName = Oas3Tools.sanitizeAndStore(
+
+        let saneFieldName = Oas3Tools.storeSaneName(
+          saneOperationId,
           operationId,
           data.saneMap
         )
@@ -406,7 +421,7 @@ async function translateOpenApiToGraphQL(
             description: 'The start of any query',
             fields: queryFields
           })
-        : GraphQLTools.getEmptyObjectType('query'),
+        : GraphQLTools.getEmptyObjectType('Query'), // A GraphQL schema must contain a Query object type
     mutation:
       Object.keys(mutationFields).length > 0
         ? new GraphQLObjectType({
@@ -424,9 +439,9 @@ async function translateOpenApiToGraphQL(
    * if a field references an undefined Object Types, GraphQL will throw.
    */
   Object.entries(data.operations).forEach(([opId, operation]) => {
-    if (typeof operation.responseDefinition.ot === 'undefined') {
-      operation.responseDefinition.ot = GraphQLTools.getEmptyObjectType(
-        operation.responseDefinition.otName
+    if (typeof operation.responseDefinition.graphQLType === 'undefined') {
+      operation.responseDefinition.graphQLType = GraphQLTools.getEmptyObjectType(
+        operation.responseDefinition.graphQLTypeName
       )
     }
   })
@@ -454,7 +469,7 @@ function getFieldForOperation(
 
   // Create resolve function:
   const payloadSchemaName = operation.payloadDefinition
-    ? operation.payloadDefinition.iotName
+    ? operation.payloadDefinition.graphQLInputObjectTypeName
     : null
 
   const resolve = getResolver({
@@ -602,4 +617,4 @@ function preliminaryChecks(
   }
 }
 
-export { sanitize } from './oas_3_tools'
+export { sanitize, CaseStyle } from './oas_3_tools'

@@ -98,7 +98,10 @@ function startServer(PORT) {
       model: 'Retro Rides',
       color: 'yellow',
       kind: 'SEDAN',
-      rating: 100
+      rating: 100,
+      features: {
+        color: 'banana yellow to be specific'
+      }
     },
     will: {
       model: 'Speedzone Speedster',
@@ -527,12 +530,10 @@ function startServer(PORT) {
         message: 'wrong data'
       })
     } else {
-      res
-        .status(200)
-        .send([
-          { text: 'Great product', timestamp: 1502787600000000 },
-          { text: 'I love it', timestamp: 1502787400000000 }
-        ])
+      res.status(200).send([
+        { text: 'Great product', timestamp: 1502787600000000 },
+        { text: 'I love it', timestamp: 1502787400000000 }
+      ])
     }
   })
 
