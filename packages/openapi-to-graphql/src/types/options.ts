@@ -6,6 +6,7 @@
 // Type imports:
 import * as NodeRequest from 'request'
 import { ResolveFunction } from './graphql'
+import { RequestOptions } from '../resolver_builder'
 
 /**
  * Type definition of the options that users can pass to OpenAPI-to-GraphQL.
@@ -91,7 +92,7 @@ export type Options = {
    * calls to the API backend.
    * e.g. Setup the web proxy to use.
    */
-  requestOptions?: NodeRequest.OptionsWithUrl
+  requestOptions?: RequestOptions
 
   /**
    * Specifies the URL on which all paths will be based on.

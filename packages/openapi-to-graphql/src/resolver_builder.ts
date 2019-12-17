@@ -37,8 +37,8 @@ type AuthOptions = {
   authCookie: NodeRequest.Cookie
 }
 
-type RequestOptions = Omit<NodeRequest.OptionsWithUrl, 'headers'> & {
-  headers: { [key: string]: string } | RequestHeadersFunction
+export type RequestOptions = Omit<NodeRequest.OptionsWithUrl, 'headers'> & {
+  headers?: { [key: string]: string } | RequestHeadersFunction
 }
 
 type GetResolverParams = {
