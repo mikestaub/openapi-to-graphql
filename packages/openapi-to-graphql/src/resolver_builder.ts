@@ -13,6 +13,7 @@ import { Operation, DataDefinition } from './types/operation'
 import { ResolveFunction } from './types/graphql'
 import { PreprocessingData } from './types/preprocessing_data'
 import * as NodeRequest from 'request'
+import { RequestHeadersFunction } from './types/options'
 
 // Imports:
 import * as Oas3Tools from './oas_3_tools'
@@ -36,13 +37,17 @@ type AuthOptions = {
   authCookie: NodeRequest.Cookie
 }
 
+export type RequestOptions = Omit<NodeRequest.OptionsWithUrl, 'headers'> & {
+  headers?: { [key: string]: string } | RequestHeadersFunction
+}
+
 type GetResolverParams = {
   operation: Operation
   argsFromLink?: { [key: string]: string }
   payloadName?: string
   data: PreprocessingData
   baseUrl?: string
-  requestOptions?: NodeRequest.OptionsWithUrl
+  requestOptions?: RequestOptions
 }
 
 /**
@@ -214,8 +219,17 @@ export function getResolver({
       options = { ...requestOptions }
       options['method'] = operation.method
       options['url'] = url
-      if (options.headers) {
-        Object.assign(options.headers, headers)
+      if (requestOptions.headers) {
+        if (typeof requestOptions.headers === 'object') {
+          Object.assign(requestOptions.headers, headers)
+        } else if (typeof requestOptions.headers === 'function') {
+          options.headers = requestOptions.headers({
+            context: ctx,
+            method,
+            path,
+            title
+          })
+        }
       } else {
         options['headers'] = headers
       }
@@ -269,7 +283,7 @@ export function getResolver({
      */
     if (typeof data.options === 'object') {
       // Headers:
-      if (typeof data.options.headers === 'object') {
+      if (typeof data.options.headers === 'object' && !requestOptions.headers) {
         for (let header in data.options.headers) {
           const val = data.options.headers[header]
           options.headers[header] = val

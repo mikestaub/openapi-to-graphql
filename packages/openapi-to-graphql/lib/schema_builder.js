@@ -17,7 +17,9 @@ const translationLog = debug_1.default('translation');
  * Creates and returns a GraphQL (Input) Type for the given JSON schema.
  */
 function getGraphQLType({ def, operation, data, iteration = 0, isInputObjectType = false }) {
-    const name = isInputObjectType ? def.graphQLInputObjectTypeName : def.graphQLTypeName;
+    const name = isInputObjectType
+        ? def.graphQLInputObjectTypeName
+        : def.graphQLTypeName;
     // Avoid excessive iterations
     if (iteration === 50) {
         throw new Error(`Too many iterations when creating schema ${name}`);
@@ -88,7 +90,8 @@ function createOrReuseOt({ def, operation, data, iteration, isInputObjectType })
         // CASE: mutation - reuse input object type
     }
     else {
-        if (def.graphQLInputObjectType && typeof def.graphQLInputObjectType !== 'undefined') {
+        if (def.graphQLInputObjectType &&
+            typeof def.graphQLInputObjectType !== 'undefined') {
             translationLog(`Reuse input object type '${def.graphQLInputObjectTypeName}'` +
                 (typeof operation === 'object'
                     ? ` (for operation '${operation.operationId}')`
@@ -176,13 +179,19 @@ function createOrReuseOt({ def, operation, data, iteration, isInputObjectType })
  * Returns an existing List or creates a new one, and stores it in data
  */
 function createOrReuseList({ def, operation, iteration, isInputObjectType, data }) {
-    const name = isInputObjectType ? def.graphQLInputObjectTypeName : def.graphQLTypeName;
+    const name = isInputObjectType
+        ? def.graphQLInputObjectTypeName
+        : def.graphQLTypeName;
     // Try to reuse existing Object Type
-    if (!isInputObjectType && def.graphQLType && typeof def.graphQLType !== 'undefined') {
+    if (!isInputObjectType &&
+        def.graphQLType &&
+        typeof def.graphQLType !== 'undefined') {
         translationLog(`Reuse GraphQLList '${def.graphQLTypeName}'`);
         return def.graphQLType;
     }
-    else if (isInputObjectType && def.graphQLInputObjectType && typeof def.graphQLInputObjectType !== 'undefined') {
+    else if (isInputObjectType &&
+        def.graphQLInputObjectType &&
+        typeof def.graphQLInputObjectType !== 'undefined') {
         translationLog(`Reuse GraphQLList '${def.graphQLInputObjectTypeName}'`);
         return def.graphQLInputObjectType;
     }

@@ -6,6 +6,7 @@
 // Type imports:
 import * as NodeRequest from 'request'
 import { ResolveFunction } from './graphql'
+import { RequestOptions } from '../resolver_builder'
 
 /**
  * Type definition of the options that users can pass to OpenAPI-to-GraphQL.
@@ -91,7 +92,7 @@ export type Options = {
    * calls to the API backend.
    * e.g. Setup the web proxy to use.
    */
-  requestOptions?: NodeRequest.OptionsWithUrl
+  requestOptions?: RequestOptions
 
   /**
    * Specifies the URL on which all paths will be based on.
@@ -163,6 +164,13 @@ export type Options = {
   equivalentToMessages?: boolean
 }
 
+export type RequestHeadersFunction = (params: {
+  context: Object
+  method: string
+  path: string
+  title: string
+}) => object
+
 export type InternalOptions = {
   /**
    * Adhere to the OAS as closely as possible. If set to true, any deviation
@@ -221,7 +229,7 @@ export type InternalOptions = {
   /**
    * Custom headers to send with every request made by a resolve function.
    */
-  headers?: { [key: string]: string }
+  headers?: { [key: string]: string } | RequestHeadersFunction
 
   /**
    * Custom query parameters to send with every reqeust by a resolve function.

@@ -2,6 +2,12 @@ import { Operation } from './types/operation';
 import { ResolveFunction } from './types/graphql';
 import { PreprocessingData } from './types/preprocessing_data';
 import * as NodeRequest from 'request';
+import { RequestHeadersFunction } from './types/options';
+export declare type RequestOptions = Omit<NodeRequest.OptionsWithUrl, 'headers'> & {
+    headers?: {
+        [key: string]: string;
+    } | RequestHeadersFunction;
+};
 declare type GetResolverParams = {
     operation: Operation;
     argsFromLink?: {
@@ -10,7 +16,7 @@ declare type GetResolverParams = {
     payloadName?: string;
     data: PreprocessingData;
     baseUrl?: string;
-    requestOptions?: NodeRequest.OptionsWithUrl;
+    requestOptions?: RequestOptions;
 };
 /**
  * Creates and returns a resolver function that performs API requests for the

@@ -192,10 +192,10 @@ function createOrReuseOt({
             ? ` (for operation '${operation.operationId}')`
             : '')
       )
-      return def.graphQLType as (
+      return def.graphQLType as
         | GraphQLObjectType
         | GraphQLInputObjectType
-        | GraphQLScalarType)
+        | GraphQLScalarType
     }
 
     // CASE: mutation - reuse input object type

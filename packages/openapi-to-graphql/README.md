@@ -164,7 +164,9 @@ Resolver options:
 
 - `qs` (type: `object`, default: `{}`): Query parameters to be sent in every request to the API described by the given OAS. Parameters defined in the OpenAPI Specification to set these query parameters will be ignored by OpenAPI-to-GraphQL.
 
-- `requestOptions` (type: `object`, default: `{}`): Additional [options](https://github.com/request/request#requestoptions-callback), provided by the [`Request` module](https://github.com/request/request), that can be used to configure the HTTP calls that powers the generated GraphQL resolvers. A common use case for this option is to set up a web proxy with the `proxy` field.
+- `requestOptions` (type: `object`, default: `{}`): Additional [options](https://github.com/request/request#requestoptions-callback), provided by the [`Request` module](https://github.com/request/request), that can be used to configure the HTTP calls that powers the generated GraphQL resolvers. A common use case for this option is to set up a web proxy with the `proxy` field. You may specify a function for the `headers` field with the following
+signature: `(context, method, path, title) => Object`
+This `headers` field will override the top-level `headers` field if specified.
 
 - `baseUrl` (type: `string`): Used to manually specify the base URL which all paths will be built on. Normally, OpenAPI-to-GraphQL will select a base URL from the [server object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.2.md#serverObject) defined in the OAS. However, if the server object contains multiple URLs, OpenAPI-to-GraphQL will randomly select one. The purpose of this option is to provide greater control over the base URL in these situations, especially when the OAS cannot be modified. This option may also prove to be useful in testing and development.
 
