@@ -3,7 +3,7 @@ import { ResolveFunction } from './types/graphql';
 import { PreprocessingData } from './types/preprocessing_data';
 import * as NodeRequest from 'request';
 import { RequestHeadersFunction } from './types/options';
-export declare type RequestOptions = Omit<NodeRequest.OptionsWithUrl, 'headers'> & {
+export declare type RequestOptions = Omit<NodeRequest.Options, 'headers'> & {
     headers?: {
         [key: string]: string;
     } | RequestHeadersFunction;
