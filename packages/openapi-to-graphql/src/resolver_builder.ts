@@ -37,7 +37,7 @@ type AuthOptions = {
   authCookie: NodeRequest.Cookie
 }
 
-export type RequestOptions = Omit<NodeRequest.OptionsWithUrl, 'headers'> & {
+export type RequestOptions = Omit<NodeRequest.Options, 'headers'> & {
   headers?: { [key: string]: string } | RequestHeadersFunction
 }
 
@@ -216,9 +216,11 @@ export function getResolver({
 
     let options: NodeRequest.OptionsWithUrl
     if (requestOptions) {
-      options = { ...requestOptions }
-      options['method'] = operation.method
-      options['url'] = url
+      options = {
+        ...requestOptions,
+        url,
+        method: operation.method
+      }
       if (requestOptions.headers) {
         if (typeof requestOptions.headers === 'object') {
           Object.assign(requestOptions.headers, headers)
