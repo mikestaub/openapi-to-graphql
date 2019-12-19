@@ -133,9 +133,7 @@ function getResolver({ operation, argsFromLink = {}, payloadName, data, baseUrl,
                 : 'application/json';
         let options;
         if (requestOptions) {
-            options = Object.assign({}, requestOptions);
-            options['method'] = operation.method;
-            options['url'] = url;
+            options = Object.assign(Object.assign({}, requestOptions), { url, method: operation.method });
             if (requestOptions.headers) {
                 if (typeof requestOptions.headers === 'object') {
                     Object.assign(requestOptions.headers, headers);

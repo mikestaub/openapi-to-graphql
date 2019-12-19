@@ -141,7 +141,7 @@ export declare type Options = {
     equivalentToMessages?: boolean;
 };
 export declare type RequestHeadersFunction = (params: {
-    context: Object;
+    context: any;
     method: string;
     path: string;
     title: string;

@@ -165,7 +165,7 @@ export type Options = {
 }
 
 export type RequestHeadersFunction = (params: {
-  context: Object
+  context: any
   method: string
   path: string
   title: string
