@@ -214,12 +214,14 @@ export function getResolver({
         ? operation.responseContentType
         : 'application/json'
 
-    let options: NodeRequest.OptionsWithUrl
+    let options: NodeRequest.OptionsWithUrl = {
+      url,
+      method: operation.method
+    }
     if (requestOptions) {
       options = {
-        ...requestOptions,
-        url,
-        method: operation.method
+        ...options,
+        ...requestOptions
       }
       if (requestOptions.headers) {
         if (typeof requestOptions.headers === 'object') {
@@ -285,7 +287,10 @@ export function getResolver({
      */
     if (typeof data.options === 'object') {
       // Headers:
-      if (typeof data.options.headers === 'object' && !requestOptions.headers) {
+      if (
+        typeof data.options.headers === 'object' &&
+        (!requestOptions || !requestOptions.headers)
+      ) {
         for (let header in data.options.headers) {
           const val = data.options.headers[header]
           options.headers[header] = val
