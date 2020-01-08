@@ -197,7 +197,8 @@ function getResolver({ operation, argsFromLink = {}, payloadName, data, baseUrl,
          */
         if (typeof data.options === 'object') {
             // Headers:
-            if (typeof data.options.headers === 'object' && (!requestOptions || !requestOptions.headers)) {
+            if (typeof data.options.headers === 'object' &&
+                (!requestOptions || !requestOptions.headers)) {
                 for (let header in data.options.headers) {
                     const val = data.options.headers[header];
                     options.headers[header] = val;
