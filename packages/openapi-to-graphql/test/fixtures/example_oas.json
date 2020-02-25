@@ -1108,7 +1108,7 @@
   },
   "components": {
     "schemas": {
-      "address": {
+      "Address": {
         "type": "object",
         "description": "The legal address of a user",
         "properties": {
@@ -1176,7 +1176,7 @@
             "type": "array",
             "description": "The offices of a company",
             "items": {
-              "$ref": "#/components/schemas/address"
+              "$ref": "#/components/schemas/Address"
             }
           }
         }
@@ -1342,10 +1342,10 @@
             "description": "The legal name of a user"
           },
           "address": {
-            "$ref": "#/components/schemas/address"
+            "$ref": "#/components/schemas/Address"
           },
           "address2": {
-            "$ref": "#/components/schemas/address"
+            "$ref": "#/components/schemas/Address"
           },
           "employerId": {
             "type": "string",

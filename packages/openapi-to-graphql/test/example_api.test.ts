@@ -697,6 +697,10 @@ test('Post resource', () => {
         street: "Home streeet 1"
         city: "Hamburg"
       }
+      address2: {
+        street: "Home streeet 2"
+        city: "Hamburg"
+      }
       employerId: "binsol"
       hobbies: "soccer"
     }) {
@@ -707,7 +711,15 @@ test('Post resource', () => {
     expect(result).toEqual({
       data: {
         postUser: {
-          name: 'Mr. New Guy'
+          name: 'Mr. New Guy',
+          address: {
+            street: 'Home streeet 1',
+            city: 'Hamburg'
+          },
+          address2: {
+            street: 'Home streeet 2',
+            city: 'Hamburg'
+          }
         }
       }
     })
